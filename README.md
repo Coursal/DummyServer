@@ -12,5 +12,5 @@ A (way too) simple concurrent server for (way too) simple things, such as:
 2. `./server *port_number*`
 
 #### Client:
-1. `gcc -pthread -o server server.c`
+1. `gcc -o client client.c`
 2. `./client *host_name* *port_number*`
