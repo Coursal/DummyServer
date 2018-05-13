@@ -8,8 +8,11 @@
 void *session_function(void *arg)
 {
 	int client=(int) arg;
+	
 	int n;
+	float r;
 	int *X;
+	float *prod;
 	int i=0;
 	int sum=0;
 	float average;
@@ -17,6 +20,7 @@ void *session_function(void *arg)
 	int min;
 	
 	char data[100];
+	int index=0;
 
 	printf("Connected.\n");
 
@@ -29,6 +33,16 @@ void *session_function(void *arg)
 	////////////////////////////////////////////////////////
 	
 	X=(int *)malloc(n*sizeof(int));
+
+	////////////////////////////////////////////////////////
+	//receiving the number r...
+	////////////////////////////////////////////////////////
+	recv(client,data,100,0);
+	r=atof(data);
+	////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////
+	
+	prod=(float *)malloc(n*sizeof(float));
 	
 	////////////////////////////////////////////////////////
 	//calculating and sending average...
@@ -73,15 +87,30 @@ void *session_function(void *arg)
 			min=X[i];
 	}
 	
-	//printf("Max element: %d \n Min element: %d \n", max, min);
 	bzero(data,100);
 	sprintf(data,"%d#%d", max, min);
-	printf("Data to send: \"%s\"  \n", data);
 
 	sleep(1);
 	send(client,data,sizeof(data),0);
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
+	
+	
+	////////////////////////////////////////////////////////
+	//calculating and sending prod=r*X...
+	////////////////////////////////////////////////////////
+	for(i=0;i<n;i++)
+		prod[i]=(float)X[i]*(float)r;
+
+	bzero(data,100);
+	for(i=0;i<n;i++)
+		index+=sprintf(&data[index], "%.2f#", prod[i]);
+	
+	sleep(1);
+	send(client,data,sizeof(data),0);
+	////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////
+	
 	
 	close(client);
 	pthread_exit(NULL);
