@@ -43,16 +43,13 @@ int main(int argc, char** argv)
 	
 	connect(server_socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 	
-	
 	////////////////////////////////////////////////////////
 	//sending the number of elements (n)...
 	////////////////////////////////////////////////////////
 	printf("Give n to the server: ");
-	bzero(buffer, 256);
-	fgets(buffer, 255, stdin);
-	n=atoi(buffer);
+	scanf("%d", &n);
 	
-	write(server_socket,buffer,strlen(buffer));
+	send(server_socket, &n, sizeof(int), 0);
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
 
@@ -61,12 +58,10 @@ int main(int argc, char** argv)
 	//sending the number r...
 	////////////////////////////////////////////////////////
 	printf("Give r to the server: ");
-	bzero(buffer, 256);
-	fgets(buffer, 255, stdin);
-	r=atoi(buffer);
-	
+	scanf("%f", &r);
+
 	sleep(1);
-	write(server_socket,buffer,strlen(buffer));
+	send(server_socket, &r, sizeof(float), 0);
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
 
@@ -82,156 +77,83 @@ int main(int argc, char** argv)
 		scanf("%d", &X[i]);
 	}
 	
-	bzero(buffer,256);
-	for(i=0;i<n;i++)
-		index+=sprintf(&buffer[index], "%d#", X[i]);
-
 	sleep(1);
-	write(server_socket,buffer,strlen(buffer));
+	send(server_socket,X,n*sizeof(int),0);
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
-	
 	
 	printf("--------------------------------------------------------------------\n");
+	
+	int flag=1;
 
-	printf("==========================\n");
-	printf("=====Dummy Operations=====\n");
-	printf("==========================\n");
-	printf("1. average of X[]      			  \n");
-	printf("2. max & min of X[]                          \n");
-	printf("3. r*X[]                                               \n");
-	printf("==========================\n");
-	printf("Choice: ");
-	scanf("%d", &choice);
-	printf("==========================\n");
-	
-	bzero(buffer, 256);
-	sleep(1);
-	sprintf(buffer,"%d",choice);
-	write(server_socket,buffer,strlen(buffer));
-	
-	printf("--------------------------------------------------------------------\n");	
+	do
+	{
+		printf("==========================\n");
+		printf("=====Dummy Operations=====\n");
+		printf("==========================\n");
+		printf("1. average of X[]      			  \n");
+		printf("2. max & min of X[]                          \n");
+		printf("3. r*X[]                                               \n");
+		printf("4. Exit                                                  \n");
+		printf("==========================\n");
+		printf("Choice: ");
+		scanf("%d", &choice);
+		printf("==========================\n");
+		
+		sleep(1);
+		send(server_socket,&choice,sizeof(int),0);
+		
+		printf("--------------------------------------------------------------------\n");	
 
-	if(choice==1)
-	{		
-			////////////////////////////////////////////////////////
-			//receiving average...
-			////////////////////////////////////////////////////////
-			bzero(buffer,256);
-			read(server_socket,buffer,255);
-			average=atof(buffer);
-			printf("Average: %.2f \n", average);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////
-	}
-	else if(choice==2)
-	{
-			////////////////////////////////////////////////////////
-			//receiving max and min elements...
-			////////////////////////////////////////////////////////
-			bzero(buffer,256);
-			read(server_socket,buffer,255);
-			
-			i=0;
-			
-			char *p=strtok(buffer,"#");
-			while(p!=NULL)
-			{
-				max_and_min[i++]=atoi(p);
-				p=strtok(NULL,"#");	
-			}
-			
-			printf("Max element: %d \nMin element: %d \n", max_and_min[0], max_and_min[1]);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////
-	
-	}
-	else if(choice==3)
-	{
-			////////////////////////////////////////////////////////
-			//receiving prod=r*X...
-			////////////////////////////////////////////////////////
-			prod=(float *)malloc(n*sizeof(float));
-			
-			bzero(buffer,256);
-			read(server_socket,buffer,255);
-			
-			i=0;
-			
-			char *p=strtok(buffer,"#");
-			while(p!=NULL)
-			{
-				prod[i++]=atof(p);
-				p=strtok(NULL,"#");	
-			}
-			
-			for(i=0;i<n;i++)
-				printf("X[%d]*r = %.2f \n", i, prod[i]);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////
-	}
-	else
-	{
-			printf("Invalid Choice. Terminating in 3...2...1....\n");
-			exit(1);
-	}
+		if(choice==1)
+		{	
+				////////////////////////////////////////////////////////
+				//receiving average...
+				////////////////////////////////////////////////////////
+				recv(server_socket,&average,sizeof(float),0);
+				printf("Average: %.2f \n", average);
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////
+		}
+		else if(choice==2)
+		{
+				////////////////////////////////////////////////////////
+				//receiving max and min elements...
+				////////////////////////////////////////////////////////
+				recv(server_socket,max_and_min,2*sizeof(int),0);
+				
+				printf("Max element: %d \n", max_and_min[0]);
+				printf("Min element: %d \n", max_and_min[1]);
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////
+		
+		}
+		else if(choice==3)
+		{
+				////////////////////////////////////////////////////////
+				//receiving prod=r*X...
+				////////////////////////////////////////////////////////
+				prod=(float *)malloc(n*sizeof(float));
+				
+				recv(server_socket,prod,n*sizeof(float),0);
+				
+				for(i=0;i<n;i++)
+					printf("X[%d]*r = %.2f \n", i, prod[i]);
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////
+		}
+		else if(choice==4)
+		{
+				flag=0;
+		}
+		else
+		{
+				printf("Invalid Choice. Terminating in 3...2...1....\n");
+				exit(1);
+		}
+	}while(flag);
 
 	printf("--------------------------------------------------------------------\n");
-
-	/*
-	////////////////////////////////////////////////////////
-	//receiving average...
-	////////////////////////////////////////////////////////
-	bzero(buffer,256);
-	read(server_socket,buffer,255);
-	average=atof(buffer);
-	printf("Average: %.2f \n", average);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	
-	////////////////////////////////////////////////////////
-	//receiving max and min elements...
-	////////////////////////////////////////////////////////
-	bzero(buffer,256);
-	read(server_socket,buffer,255);
-	
-	i=0;
-	
-	char *p=strtok(buffer,"#");
-	while(p!=NULL)
-	{
-		max_and_min[i++]=atoi(p);
-		p=strtok(NULL,"#");	
-	}
-
-	printf("Max element: %d \nMin element: %d \n", max_and_min[0], max_and_min[1]);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	
-	////////////////////////////////////////////////////////
-	//receiving prod=r*X...
-	////////////////////////////////////////////////////////
-	prod=(float *)malloc(n*sizeof(float));
-	
-	bzero(buffer,256);
-	read(server_socket,buffer,255);
-	
-	i=0;
-	
-	p=strtok(buffer,"#");
-	while(p!=NULL)
-	{
-		prod[i++]=atof(p);
-		p=strtok(NULL,"#");	
-	}
-	
-	for(i=0;i<n;i++)
-		printf("X[%d]*r = %.2f \n", i, prod[i]);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	*/
 
 	return 0;
 }

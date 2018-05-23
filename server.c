@@ -20,6 +20,7 @@ void *session_function(void *arg)
 	float average;
 	int max;
 	int min;
+	int max_and_min[2];
 	
 	char data[100];
 	int index=0;
@@ -29,8 +30,7 @@ void *session_function(void *arg)
 	////////////////////////////////////////////////////////
 	//receiving the number of elements (n)...
 	////////////////////////////////////////////////////////
-	recv(client,data,100,0);
-	n=atoi(data);
+	recv(client,&n,sizeof(int),0);
 	
 	printf("n is %d\n", n);
 	////////////////////////////////////////////////////////
@@ -40,14 +40,10 @@ void *session_function(void *arg)
 	////////////////////////////////////////////////////////
 	//receiving the number r...
 	////////////////////////////////////////////////////////
-	bzero(data,100);
 	sleep(1);
-	recv(client,data,100,0);
-	r=atof(data);
+	recv(client,&r,sizeof(float),0);
 
 	printf("r is %.2f\n", r);
-
-	prod=(float *)malloc(n*sizeof(float));
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
 	
@@ -57,190 +53,110 @@ void *session_function(void *arg)
 	////////////////////////////////////////////////////////
 	X=(int *)malloc(n*sizeof(int));
 
-	bzero(data,100);
-	sleep(1);
-	recv(client,data,100,0);
-
-	char *p=strtok(data,"#");
-	while(p!=NULL)
-	{
-		X[i++]=atoi(p);
-		p=strtok(NULL,"#");
-	}
-	
-	printf("X is  \"%s\"\n", data);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-
-
-
 
 	bzero(data,100);
 	sleep(1);
-	recv(client,data,100,0);
-	choice=atoi(data);
-	printf("Choice from client: %d \n", choice);
+	recv(client,X,n*sizeof(int),0);
 	
-	if(choice==1)
+	for(i=0;i<n;i++)
+		printf("X[%d]=%d\n", i, X[i]);
+	////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////
+	
+	int flag=1;
+
+	do
 	{
-			////////////////////////////////////////////////////////
-			//calculating and sending average...
-			////////////////////////////////////////////////////////
-			printf("calculating and sending average...\n");
-			
-			for(i=0;i<n;i++)
-				sum+=X[i];
-			
-			average=(float) sum/n;
-			bzero(data,100);
-			sprintf(data,"%f", average);
-				
-			send(client,data,sizeof(data),0);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////
-	}
-	else if(choice==2)
-	{
-			////////////////////////////////////////////////////////
-			//finding and sending max and min elements...
-			////////////////////////////////////////////////////////
-			max=X[0];
-			min=X[0];
-			
-			for(i=0;i<n;i++)
-			{
-				if(X[i]>max)
-					max=X[i];
-			}
-			
-			for(i=0;i<n;i++)
-			{
-				if(X[i]<min)
-					min=X[i];
-			}
-			
-			bzero(data,100);
-			sprintf(data,"%d#%d", max, min);
-			
-			//sleep(1);
-			send(client,data,sizeof(data),0);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////
-	}
-	else if(choice==3)
-	{
-			////////////////////////////////////////////////////////
-			//calculating and sending prod=r*X...
-			////////////////////////////////////////////////////////
-			for(i=0;i<n;i++)
-				prod[i]=(float)X[i]*(float)r;
+		sleep(1);
+		recv(client,&choice,sizeof(int),0);
+		printf("Choice from client: %d \n", choice);
 		
-			bzero(data,100);
-			for(i=0;i<n;i++)
-				index+=sprintf(&data[index], "%.2f#", prod[i]);
-			
-			//sleep(1);
-			send(client,data,sizeof(data),0);
-			////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////	
-	}
-	else
-	{
-			printf("Invalid Choice. Terminating in 3...2...1....\n");
-			//exit(1);
-			close(client);
-	}
+		if(choice==1)
+		{	
+				////////////////////////////////////////////////////////
+				//calculating and sending average...
+				////////////////////////////////////////////////////////
+				printf("Calculating average of X[]...\n");
+				
+				for(i=0;i<n;i++)
+					sum+=X[i];
+				
+				average=(float) sum/n;
+					
+				send(client,&average,sizeof(float),0);
+				
+				sum=0;
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////
+		}
+		else if(choice==2)
+		{
+				////////////////////////////////////////////////////////
+				//finding and sending max and min elements...
+				////////////////////////////////////////////////////////
+				printf("Finding max and min of X[]...\n");
+				
+				max=X[0];
+				min=X[0];
+				
+				for(i=0;i<n;i++)
+				{
+					if(X[i]>max)
+						max=X[i];
+				}
+				
+				for(i=0;i<n;i++)
+				{
+					if(X[i]<min)
+						min=X[i];
+				}
+				
+				max_and_min[0]=max;
+				max_and_min[1]=min;
+				
+				for(i=0;i<2;i++)
+					printf("max_and_min[%d]=%d\n", i, max_and_min[i]);
 	
-	
-	/*
-	////////////////////////////////////////////////////////
-	//receiving the number of elements (n)...
-	////////////////////////////////////////////////////////
-	recv(client,data,100,0);
-	n=atoi(data);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	X=(int *)malloc(n*sizeof(int));
+				sleep(1);
+				send(client,max_and_min,2*sizeof(int),0);
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////
+		}
+		else if(choice==3)
+		{
+				////////////////////////////////////////////////////////
+				//calculating and sending prod=r*X...
+				////////////////////////////////////////////////////////
+				printf("Calculating r*X[]...\n");
 
-	////////////////////////////////////////////////////////
-	//receiving the number r...
-	////////////////////////////////////////////////////////
-	recv(client,data,100,0);
-	r=atof(data);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	prod=(float *)malloc(n*sizeof(float));
-	
-	////////////////////////////////////////////////////////
-	//calculating and sending average...
-	////////////////////////////////////////////////////////
-	bzero(data,100);
-	recv(client,data,100,0);
-	
-	char *p=strtok(data,"#");
-	while(p!=NULL)
-	{
-		X[i++]=atoi(p);
-		p=strtok(NULL,"#");
-	}
+				prod=(float *)malloc(n*sizeof(float));
 
-	for(i=0;i<n;i++)
-		sum+=X[i];
+				for(i=0;i<n;i++)
+					prod[i]=(float)X[i]*(float)r;
+				
+				for(i=0;i<n;i++)
+					printf("prod[%d]=%.2f\n", i, prod[i]);
+				
+				sleep(1);
+				send(client,prod,n*sizeof(float),0);
 
-	average=(float) sum/n;
-	bzero(data,100);
-	sprintf(data,"%f", average);
-	
-	send(client,data,sizeof(data),0);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	
-	////////////////////////////////////////////////////////
-	//finding and sending max and min elements...
-	////////////////////////////////////////////////////////
-	max=X[0];
-	min=X[0];
-	
-	for(i=0;i<n;i++)
-	{
-		if(X[i]>max)
-			max=X[i];
-	}
-
-	for(i=0;i<n;i++)
-	{
-		if(X[i]<min)
-			min=X[i];
-	}
-	
-	bzero(data,100);
-	sprintf(data,"%d#%d", max, min);
-
-	sleep(1);
-	send(client,data,sizeof(data),0);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	
-	
-	////////////////////////////////////////////////////////
-	//calculating and sending prod=r*X...
-	////////////////////////////////////////////////////////
-	for(i=0;i<n;i++)
-		prod[i]=(float)X[i]*(float)r;
-
-	bzero(data,100);
-	for(i=0;i<n;i++)
-		index+=sprintf(&data[index], "%.2f#", prod[i]);
-	
-	sleep(1);
-	send(client,data,sizeof(data),0);
-	////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////
-	*/
-	
+				for(i=0;i<n;i++)
+					prod[i]=0;
+				////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////	
+		}
+		else if(choice==4)
+		{
+				printf("Client exiting....\n");
+				flag=0;
+		}
+		else
+		{
+				printf("Invalid Choice. Terminating in 3...2...1....\n");
+				//exit(1);
+				//close(client);
+		}
+	}while(flag);
 	
 	close(client);
 	pthread_exit(NULL);
