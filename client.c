@@ -11,6 +11,8 @@ int main(int argc, char** argv)
 	int server_socket;
 	int portno;
 	
+	int choice;
+	
 	int i;
 	int index=0;
 	
@@ -63,6 +65,7 @@ int main(int argc, char** argv)
 	fgets(buffer, 255, stdin);
 	r=atoi(buffer);
 	
+	sleep(1);
 	write(server_socket,buffer,strlen(buffer));
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
@@ -83,14 +86,99 @@ int main(int argc, char** argv)
 	for(i=0;i<n;i++)
 		index+=sprintf(&buffer[index], "%d#", X[i]);
 
+	sleep(1);
 	write(server_socket,buffer,strlen(buffer));
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
 	
 	
 	printf("--------------------------------------------------------------------\n");
+
+	printf("==========================\n");
+	printf("=====Dummy Operations=====\n");
+	printf("==========================\n");
+	printf("1. average of X[]      			  \n");
+	printf("2. max & min of X[]                          \n");
+	printf("3. r*X[]                                               \n");
+	printf("==========================\n");
+	printf("Choice: ");
+	scanf("%d", &choice);
+	printf("==========================\n");
 	
+	bzero(buffer, 256);
+	sleep(1);
+	sprintf(buffer,"%d",choice);
+	write(server_socket,buffer,strlen(buffer));
 	
+	printf("--------------------------------------------------------------------\n");	
+
+	if(choice==1)
+	{		
+			////////////////////////////////////////////////////////
+			//receiving average...
+			////////////////////////////////////////////////////////
+			bzero(buffer,256);
+			read(server_socket,buffer,255);
+			average=atof(buffer);
+			printf("Average: %.2f \n", average);
+			////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////
+	}
+	else if(choice==2)
+	{
+			////////////////////////////////////////////////////////
+			//receiving max and min elements...
+			////////////////////////////////////////////////////////
+			bzero(buffer,256);
+			read(server_socket,buffer,255);
+			
+			i=0;
+			
+			char *p=strtok(buffer,"#");
+			while(p!=NULL)
+			{
+				max_and_min[i++]=atoi(p);
+				p=strtok(NULL,"#");	
+			}
+			
+			printf("Max element: %d \nMin element: %d \n", max_and_min[0], max_and_min[1]);
+			////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////
+	
+	}
+	else if(choice==3)
+	{
+			////////////////////////////////////////////////////////
+			//receiving prod=r*X...
+			////////////////////////////////////////////////////////
+			prod=(float *)malloc(n*sizeof(float));
+			
+			bzero(buffer,256);
+			read(server_socket,buffer,255);
+			
+			i=0;
+			
+			char *p=strtok(buffer,"#");
+			while(p!=NULL)
+			{
+				prod[i++]=atof(p);
+				p=strtok(NULL,"#");	
+			}
+			
+			for(i=0;i<n;i++)
+				printf("X[%d]*r = %.2f \n", i, prod[i]);
+			////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////
+	}
+	else
+	{
+			printf("Invalid Choice. Terminating in 3...2...1....\n");
+			exit(1);
+	}
+
+	printf("--------------------------------------------------------------------\n");
+
+	/*
 	////////////////////////////////////////////////////////
 	//receiving average...
 	////////////////////////////////////////////////////////
@@ -143,7 +231,7 @@ int main(int argc, char** argv)
 		printf("X[%d]*r = %.2f \n", i, prod[i]);
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
-	
+	*/
 
 	return 0;
 }
