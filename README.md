@@ -15,4 +15,6 @@ A (way too) simple concurrent server for (way too) simple things, such as:
 1. `gcc -o client client.c`
 2. `./client *host_name* *port_number*`
 
+Sister project of [DummyRPCServer](https://github.com/Coursal/DummyRPCServer).
+
 Tested on Lubuntu 12.04 (Precise Pangolin) on a virtual machine.
