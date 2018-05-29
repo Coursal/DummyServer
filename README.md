@@ -1,4 +1,4 @@
-# DummyServer
+# DummySocketServer
 A (way too) simple concurrent server for (way too) simple things, such as:
 
 * calculating the average of an array of integers (X)
